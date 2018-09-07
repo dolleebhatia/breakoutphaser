@@ -23,7 +23,18 @@ export default class extends Phaser.State {
     this.setUpBricks()
     this.setUpPaddle()
     this.setUpBall()
+
+    this.game.input.onDown.add(this.releaseBall, this)
   }
+
+releaseBall(){
+    if(!this.ballOnPaddle){
+      return
+    }
+    this.ballOnPaddle = false
+    this.ball.body.velocity.y = -300
+    this.ball.body.velocity.x = -30
+}
 
   setUpBall(){
   this.ball = new Ball(this.game)
@@ -75,9 +86,9 @@ export default class extends Phaser.State {
   }
 
   setUpText(){
-  this.createText(20,20,'left', 'Score: ' + this.game.global.score)
-  this.createText(20,40,'left', 'Lives: ' + this.game.global.lives)
-  this.createText(20,60,'left', 'Level: ' + this.game.global.level)
+  this.scoreText = this.createText(20,20,'left', 'Score: ' + this.game.global.score)
+  this.livesText = this.createText(20,40,'left', 'Lives: ' + this.game.global.lives)
+  this.levelText = this.createText(20,60,'left', 'Level: ' + this.game.global.level)
 }
 
   createText(xOffset, yOffset, align, text){
@@ -97,8 +108,50 @@ update(){
   if (this.ballOnPaddle){
     this.ball.body.x = this.paddle.x - (this.ball.width / 2)
   }
+
+  this.game.physics.arcade.collide(
+    this.ball,
+    this.paddle,
+    this.ballHitPaddle,
+    null,
+    this
+  )
+
+  this.game.physics.arcade.collide(
+    this.ball,
+    this.bricks,
+    this.ballHitBrick,
+    null,
+    this
+  )
+
+
 }
 
+
+ballHitPaddle (ball, paddle){
+
+  let diff = 0
+
+    if(ball.x<paddle.x){
+    diff = paddle.x - ball.x
+    ball.body.velocity.x = (-10*diff)
+    return
+    }
+
+    if(paddle.x<ball.x){
+    diff = ball.x - paddle.x
+    ball.body.velocity.x = (10*diff)
+    return
+    }
+}
+
+ballHitBrick(ball, brick){
+brick.kill()
+this.game.global.score +=10
+console.log(this.game.global.score)
+this.scoreText.text = 'Score: ' + this.game.global.score
+}
 
   render() {
 
