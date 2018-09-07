@@ -18,7 +18,8 @@ export default class extends Phaser.State {
   preload() { }
 
   create() {
-    console.log(this.game.global)
+    this.game.physics.arcade.checkCollision.down = false
+
     this.setUpText()
     this.setUpBricks()
     this.setUpPaddle()
@@ -39,8 +40,28 @@ releaseBall(){
   setUpBall(){
   this.ball = new Ball(this.game)
   this.game.add.existing(this.ball)
+  this.ball.events.onOutOfBounds.add(this.ballLost, this)
+
   this.putBallOnPaddle()
+
   }
+
+  ballLost(){
+  -- this.game.global.lives
+    this.livesText.text = 'Lives: ' + this.game.global.lives
+  if(this.game.global.lives === 0){
+      this.endGame()
+    return
+  }
+  this.putBallOnPaddle()
+}
+
+  endGame(){
+    //console.log("gameover")
+    this.game.state.start('Gameover')
+  }
+
+
 
   putBallOnPaddle(){
       this.ballOnPaddle = true
@@ -147,10 +168,19 @@ ballHitPaddle (ball, paddle){
 }
 
 ballHitBrick(ball, brick){
-brick.kill()
-this.game.global.score +=10
-console.log(this.game.global.score)
-this.scoreText.text = 'Score: ' + this.game.global.score
+  brick.kill()
+  this.game.global.score +=10
+  //console.log(this.game.global.score)
+  this.scoreText.text = 'Score: ' + this.game.global.score
+  //console.log(this.bricks.countLiving())
+    if(this.bricks.countLiving()){
+      return
+    }
+  this.game.global.level += 1
+  this.levelText.text = 'Level: ' + this.game.global.level
+  this.putBallOnPaddle()
+  this.generateBricks(this.bricks)
+
 }
 
   render() {
